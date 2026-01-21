@@ -1,51 +1,45 @@
-name: Detect PR File & Folder Changes   # Name shown in GitHub Actions UI
+name: Detect PR File & Folder Changes
 
-on:                                   # Defines when the workflow should run
-  pull_request:                       # Trigger only on Pull Requests
-    types:                            # Specific PR events
-      - opened                        # When a PR is created
-      - synchronize                   # When new commits are pushed to the PR
-      - reopened                      # When a closed PR is reopened
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
 
-jobs:                                 # All jobs for this workflow
-  detect-changes:                     # Job name (can be anything)
-    runs-on: ubuntu-latest            # GitHub-hosted Ubuntu runner
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
 
-    steps:                            # Steps run sequentially
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Checkout code           # Step name shown in logs
-        uses: actions/checkout@v4     # Downloads repo code into runner
+      - name: Get changed files
+        uses: tj-actions/changed-files@v44
+        id: changes
 
-      - name: Get changed files       # Step to detect changed files in PR
-        uses: tj-actions/changed-files@v44  # Reusable action for diff detection
-        id: changes                   # ID to reference outputs later
-
-      - name: Show changed files      # Print all changed files
-        run: |                        # Run multi-line shell script
-          echo "Changed files:"       # Print header
+      - name: Show changed files
+        shell: bash
+        run: |
+          echo "Changed files:"
           for file in ${{ steps.changes.outputs.all_changed_files }}; do
-            echo "$file"              # Print each changed file
+            echo "$file"
           done
 
-      - name: Show changed folders    # Print unique changed folders
+      - name: Show changed folders
         shell: bash
         run: |
-          echo "Changed folders:"     # Print header
-          echo "${{ steps.changes.outputs.all_changed_files }}" \
-          | tr ' ' '\n'               # Convert space-separated list to lines
-          | xargs -n1 dirname         # Extract directory name from each file
-          | sort -u                   # Sort and remove duplicates
+          echo "Changed folders:"
+          echo "${{ steps.changes.outputs.all_changed_files }}" |
+          tr ' ' '\n' |
+          xargs -n1 dirname |
+          sort -u
 
-      - name: Detect functions folder changes   # Check if functions folder changed
+      - name: Detect functions folder changes
         shell: bash
         run: |
-          echo "Functions folder changes:"      # Print header
-          echo "${{ steps.changes.outputs.all_changed_files }}" \
-          | tr ' ' '\n'                          # Convert to line-separated list
-          | grep '^functions/'                   # Filter only functions folder files
-          || echo "No functions changes"         # Print message if none found
-
-# This workflow runs whenever a Pull Request is created or updated.
-# It checks which files and folders have changed, prints them in the Actions log, 
-# and specifically identifies changes under the functions folder so we can decide 
-# which Cloud Run services need to be deployed
+          echo "Functions folder changes:"
+          echo "${{ steps.changes.outputs.all_changed_files }}" |
+          tr ' ' '\n' |
+          grep '^functions/' || echo "No functions changes"
