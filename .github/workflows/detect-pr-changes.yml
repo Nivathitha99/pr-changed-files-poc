@@ -28,6 +28,7 @@ jobs:                                 # All jobs for this workflow
           done
 
       - name: Show changed folders    # Print unique changed folders
+        shell: bash
         run: |
           echo "Changed folders:"     # Print header
           echo "${{ steps.changes.outputs.all_changed_files }}" \
@@ -36,6 +37,7 @@ jobs:                                 # All jobs for this workflow
           | sort -u                   # Sort and remove duplicates
 
       - name: Detect functions folder changes   # Check if functions folder changed
+        shell: bash
         run: |
           echo "Functions folder changes:"      # Print header
           echo "${{ steps.changes.outputs.all_changed_files }}" \
